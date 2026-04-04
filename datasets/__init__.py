@@ -6,7 +6,7 @@ from sklearn.model_selection import train_test_split
 from torch.utils.data import DataLoader, Dataset
 from torchvision import transforms
 
-from .dataset import LeavesDataset
+from .dataset import LeavesDataset, resolve_image_path
 
 
 class LeavesInferenceDataset(Dataset):
@@ -31,7 +31,7 @@ class LeavesInferenceDataset(Dataset):
 
     def __getitem__(self, idx):
         image_name = self.images[idx]
-        image_path = os.path.join(self.image_dir, image_name)
+        image_path = resolve_image_path(self.image_dir, image_name)
         from PIL import Image
 
         image = Image.open(image_path).convert('RGB')

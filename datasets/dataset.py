@@ -7,6 +7,29 @@ from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms
 
 
+def resolve_image_path(image_dir: str, image_value: str) -> str:
+    """Resolve image path robustly for values like '13501.jpg' or 'images/13501.jpg'."""
+    image_value = str(image_value).strip()
+
+    if os.path.isabs(image_value):
+        return image_value
+
+    candidate = os.path.join(image_dir, image_value)
+    if os.path.exists(candidate):
+        return candidate
+
+    norm_value = image_value.replace('\\', '/')
+    base_name = os.path.basename(os.path.normpath(image_dir))
+    prefix = f'{base_name}/'
+    if norm_value.startswith(prefix):
+        candidate2 = os.path.join(image_dir, norm_value[len(prefix):])
+        if os.path.exists(candidate2):
+            return candidate2
+        return candidate2
+
+    return candidate
+
+
 class LeavesDataset(Dataset):
     """Custom Leaves Dataset class with backward-compatible interface."""
 
@@ -87,7 +110,7 @@ class LeavesDataset(Dataset):
 
     def __getitem__(self, index):
         """Get a single sample"""
-        img_path = os.path.join(self.image_dir, self.images[index])
+        img_path = resolve_image_path(self.image_dir, self.images[index])
 
         try:
             image = Image.open(img_path).convert('RGB')
