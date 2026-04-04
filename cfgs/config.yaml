@@ -1,0 +1,55 @@
+seed: 42
+device: cuda:0
+output_dir: ./outputs/mlp_baseline
+
+data:
+  image_dir: /mnt/sharedata/ssd_large/users/liyx/leafdataset/images
+  train_csv: /mnt/sharedata/ssd_large/users/liyx/leafdataset/train.csv
+  test_csv: /mnt/sharedata/ssd_large/users/liyx/leafdataset/test.csv
+  train_ratio: 0.7
+  val_ratio: 0.1
+  test_ratio: 0.2
+  image_size: 224
+  num_workers: 4
+  pin_memory: true
+
+loader:
+  batch_size: 64
+  shuffle: true
+
+model:
+  name: mlp
+  input_dim: null
+  num_classes: null
+  num_hidden_layers: 2
+  hidden_dim: 512
+  hidden_dims: []
+  activation: relu
+  use_batchnorm: false
+  dropout: 0.0
+
+loss:
+  name: cross_entropy
+
+optimizer:
+  name: adam
+  lr: 0.001
+  weight_decay: 0.0001
+  momentum: 0.9
+  betas: [0.9, 0.999]
+
+scheduler:
+  name: none
+  step_size: 10
+  gamma: 0.1
+  t_max: 50
+
+train:
+  epochs: 30
+  save_best_only: true
+  monitor: val_acc
+  early_stopping_patience: 10
+  grad_clip_norm: null
+
+eval:
+  metrics: [accuracy, macro_f1]
