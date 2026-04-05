@@ -4,6 +4,7 @@ import os
 import torch
 
 from common.config import load_config, save_config
+from common.experiments import build_summary
 from common.logging import get_logger
 from common.loss import build_loss
 from common.optim import build_optimizer
@@ -19,6 +20,7 @@ def parse_args():
     parser = argparse.ArgumentParser(description='Train pure MLP for leaf classification')
     parser.add_argument('--config', type=str, required=True)
     parser.add_argument('--opts', nargs='*', default=[], help='Override config key-values, e.g. model.hidden_dim=256')
+    parser.add_argument('--output_dir', type=str, default=None, help='Optional output directory override')
     return parser.parse_args()
 
 
@@ -32,6 +34,8 @@ def setup_device(device_str):
 def main():
     args = parse_args()
     cfg = load_config(args.config, args.opts)
+    if args.output_dir is not None:
+        cfg['output_dir'] = args.output_dir
 
     seed_everything(cfg.get('seed', 42))
 
@@ -40,7 +44,9 @@ def main():
     ensure_dir(os.path.join(output_dir, 'plots'))
 
     logger = get_logger(output_dir)
-    save_config(cfg, os.path.join(output_dir, 'config_used.yaml'))
+    save_config(cfg, os.path.join(output_dir, 'config.yaml'))
+    exp_name = cfg.get('experiment', {}).get('name', os.path.basename(os.path.abspath(output_dir)))
+    logger.info(f'Experiment: {exp_name}')
 
     device = setup_device(cfg.get('device', 'cpu'))
     logger.info(f'Using device: {device}')
@@ -101,9 +107,12 @@ def main():
     plot_metrics(history, os.path.join(output_dir, 'plots'))
 
     save_json(data_meta, os.path.join(output_dir, 'data_meta.json'))
+    summary = build_summary(cfg, history, best_info)
+    save_json(summary, os.path.join(output_dir, 'summary.json'))
 
     logger.info(f"Training finished. Best {best_info['monitor']}={best_info['best_metric']:.4f} at epoch {best_info['best_epoch']}")
     logger.info(f'Best checkpoint: {os.path.join(output_dir, "checkpoints", "best.pth")}')
+    return summary
 
 
 if __name__ == '__main__':

@@ -1,7 +1,6 @@
 import json
 import os
 
-import matplotlib.pyplot as plt
 import pandas as pd
 
 
@@ -19,6 +18,8 @@ def save_history_csv(history, path):
 
 
 def plot_metrics(history, save_dir):
+    import matplotlib.pyplot as plt
+
     ensure_dir(save_dir)
 
     epochs = list(range(1, len(history['train_loss']) + 1))

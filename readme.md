@@ -70,7 +70,49 @@ bash scripts/train.sh
 python train.py --config cfgs/config.yaml --opts model.hidden_dim=1024 optimizer.lr=0.0005 output_dir=./outputs/exp_hd1024
 ```
 
-## 7) Testing
+## 7) Batch Experiments
+单因素批量实验入口：
+```bash
+python scripts/run_experiments.py --config cfgs/config.yaml
+```
+
+多 GPU 并行：
+```bash
+python scripts/run_experiments.py \
+  --config cfgs/config.yaml \
+  --gpus 0,1,2,3,4,5,6 \
+  --max_parallel 7
+```
+
+只跑部分因素：
+```bash
+python scripts/run_experiments.py --config cfgs/config.yaml --only lr hidden_dim
+```
+
+预览 26 个实验而不真正启动：
+```bash
+python scripts/run_experiments.py --config cfgs/config.yaml --dry_run
+```
+
+每个实验输出到 `outputs/experiments/<exp_name>/`，包含：
+- `config.yaml`
+- `history.json` / `history.csv`
+- `summary.json`
+- `plots/`
+- `checkpoints/`
+- `train.log`
+
+汇总所有实验结果：
+```bash
+python scripts/summarize_experiments.py --input_root outputs/experiments
+```
+
+生成按 factor 分组的柱状图（可选）：
+```bash
+python scripts/plot_experiment_summary.py --summary_csv outputs/experiments/experiment_summary.csv
+```
+
+## 8) Testing
 ```bash
 python test.py --config cfgs/config.yaml --checkpoint outputs/mlp_baseline/checkpoints/best.pth
 ```
@@ -84,7 +126,7 @@ bash scripts/test.sh
 python test.py --config cfgs/config.yaml --checkpoint outputs/mlp_baseline/checkpoints/best.pth --submission_path outputs/mlp_baseline/sample_submission.csv
 ```
 
-## 8) Suggested Hyperparameter Experiments
+## 9) Suggested Hyperparameter Experiments
 可以优先尝试：
 - hidden layers: `1 ~ 6`
 - hidden dim: `128 / 256 / 512 / 1024`
@@ -93,16 +135,23 @@ python test.py --config cfgs/config.yaml --checkpoint outputs/mlp_baseline/check
 - optimizer: `SGD vs Adam`
 - dropout / batchnorm / epochs
 
-## 9) Outputs
-默认输出到 `outputs/mlp_baseline/`，包括：
+## 10) Outputs
+单次训练默认输出到 `outputs/mlp_baseline/`，包括：
 - `checkpoints/best.pth`, `checkpoints/latest.pth`
 - `history.json`, `history.csv`
 - `plots/loss_curve.png`, `plots/acc_curve.png`（和可选 f1 曲线）
-- `config_used.yaml`
+- `config.yaml`
+- `summary.json`
 - `data_meta.json`
 - `test_metrics.json`（测试后生成）
 
-## 10) 纯 MLP 说明
+批量实验额外会在 `outputs/experiments/` 下生成：
+- `parallel_run.log`
+- `experiment_plan.json`
+- `experiment_summary.csv`
+- `summary_plots/`（可选）
+
+## 11) 纯 MLP 说明
 模型结构是：
 `Flatten -> Linear -> (BN) -> ReLU -> (Dropout) -> ... -> Linear(num_classes)`
 
